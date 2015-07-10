@@ -5,7 +5,6 @@ import (
 	conf "github.com/QubitProducts/bamboo/configuration"
 	"github.com/QubitProducts/bamboo/services/marathon"
 	"github.com/QubitProducts/bamboo/services/service"
-	"fmt"
 )
 
 type templateData struct {
@@ -17,11 +16,6 @@ func GetTemplateData(config *conf.Configuration, conn *zk.Conn) interface{} {
 
 	apps, _ := marathon.FetchApps(config.Marathon)
 	services, _ := service.All(conn, config.Bamboo.Zookeeper)
-
-
-	fmt.Println("aaaaaaaaaaa")
-	fmt.Println(apps)
-	fmt.Println("bbbbbbbbbbb")
 
 	return templateData{apps, services}
 }

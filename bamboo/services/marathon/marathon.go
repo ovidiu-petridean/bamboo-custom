@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"sort"
 	"strings"
-	"fmt"
 )
 
 // Describes an app process running
@@ -161,9 +160,7 @@ func createApps(tasksById map[string][]MarathonTask, marathonApps map[string]Mar
 		for _, task := range tasks {
 			if len(task.Ports) > 0 {
 				simpleTasks = append(simpleTasks, Task{Host: task.Host, Port: task.Ports[0], SecondPort: task.Ports[1]})
-				fmt.Println("Task ")
 				fmt.Println(simpleTasks)
-				fmt.Println("Endof Task ")
 			}
 		}
 
@@ -187,9 +184,7 @@ func createApps(tasksById map[string][]MarathonTask, marathonApps map[string]Mar
 			app.ServicePort = marathonApps[appId].Ports[0]
 		}
 
-		fmt.Println("App ")
 		fmt.Println(app)
-		fmt.Println("Endof App ")
 
 		apps = append(apps, app)
 	}
