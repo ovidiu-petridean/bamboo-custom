@@ -160,7 +160,6 @@ func createApps(tasksById map[string][]MarathonTask, marathonApps map[string]Mar
 		for _, task := range tasks {
 			if len(task.Ports) > 0 {
 				simpleTasks = append(simpleTasks, Task{Host: task.Host, Port: task.Ports[0], SecondPort: task.Ports[1]})
-				fmt.Println(simpleTasks)
 			}
 		}
 
@@ -184,7 +183,6 @@ func createApps(tasksById map[string][]MarathonTask, marathonApps map[string]Mar
 			app.ServicePort = marathonApps[appId].Ports[0]
 		}
 
-		fmt.Println(app)
 
 		apps = append(apps, app)
 	}
