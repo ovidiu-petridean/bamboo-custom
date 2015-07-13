@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
 	"github.com/QubitProducts/bamboo/Godeps/_workspace/src/github.com/samuel/go-zookeeper/zk"
 	c "github.com/QubitProducts/bamboo/configuration"
 )
@@ -14,6 +13,8 @@ import (
 var logger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 func pollZooKeeper(conn *zk.Conn, path string, evts chan zk.Event, quit chan bool) {
+	logger.Println("####################################Pooling zookeeper")
+	logger.Println(path)
 
 	children, _, err := conn.Children(path)
 	if err != nil {

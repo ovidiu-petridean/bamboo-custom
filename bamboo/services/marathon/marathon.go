@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"log"
+	"time"
 )
 
 // Describes an app process running
 type Task struct {
-	Host string
-	Port int
+	Host       string
+	Port       int
 	SecondPort int
 }
 
@@ -46,15 +48,26 @@ type MarathonTasks struct {
 	Tasks MarathonTaskList `json:tasks`
 }
 
+type HealthCheckResult struct {
+	TaskId              string
+	FirstSuccess        string
+	LastSuccess         string
+	LastFailure         string
+	ConsecutiveFailures int
+	Alive               bool
+
+}
+
 type MarathonTask struct {
-	AppId        string
-	Id           string
-	Host         string
-	Ports        []int
-	ServicePorts []int
-	StartedAt    string
-	StagedAt     string
-	Version      string
+	AppId              string
+	Id                 string
+	Host               string
+	Ports              []int
+	ServicePorts       []int
+	StartedAt          string
+	StagedAt           string
+	Version            string
+	HealthCheckResults []HealthCheckResult
 }
 
 func (slice MarathonTaskList) Len() int {
@@ -120,7 +133,6 @@ func fetchTasks(endpoint string) (map[string][]MarathonTask, error) {
 	response, err := client.Do(req)
 
 	var tasks MarathonTasks
-
 	if err != nil {
 		return nil, err
 	} else {
@@ -129,17 +141,35 @@ func fetchTasks(endpoint string) (map[string][]MarathonTask, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		err = json.Unmarshal(contents, &tasks)
 		if err != nil {
+			log.Println("---------88--- " + err.Error())
 			return nil, err
 		}
-
 		taskList := tasks.Tasks
 		sort.Sort(taskList)
-
 		tasksById := map[string][]MarathonTask{}
 		for _, task := range taskList {
+			//TODO; what happens if there are no healthchecks?
+
+			lastSuccessTime, errSuccess := time.Parse("2006-01-02T15:04:05Z07:00", task.HealthCheckResults[0].LastSuccess)
+			lastFailureTime, errFailure := time.Parse("2006-01-02T15:04:05Z07:00", task.HealthCheckResults[0].LastFailure)
+
+			if (errSuccess == nil) {
+				log.Println("There was a successful healthcheck")
+
+				if (errFailure == nil) {
+					if (lastSuccessTime.After(lastFailureTime)) {
+						log.Println(lastSuccessTime.String() + "  yeee should update");
+					}
+				} else {
+					log.Println("All good, should update")
+				}
+			} else {
+				log.Println("Nothing to update here")
+			}
+
+			//todo: only in case of success
 			if tasksById[task.AppId] == nil {
 				tasksById[task.AppId] = []MarathonTask{}
 			}
@@ -204,7 +234,6 @@ func parseHealthCheckPath(checks []HealthChecks) string {
 		endpoint: Marathon HTTP endpoint, e.g. http://localhost:8080
 */
 func FetchApps(maraconf configuration.Marathon) (AppList, error) {
-
 	var applist AppList
 	var err error
 

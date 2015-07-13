@@ -32,7 +32,7 @@ type Handlers struct {
 }
 
 func (h *Handlers) MarathonEventHandler(event MarathonEvent) {
-	log.Printf("%s => %s\n", event.EventType, event.Timestamp)
+	log.Printf("  ##########Handle event type %s => %s\n", event.EventType, event.Timestamp)
 	queueUpdate(h)
 	h.Conf.StatsD.Increment(1.0, "callback.marathon", 1)
 }
@@ -59,7 +59,6 @@ var queueUpdateSem = make(chan int, 1)
 
 func queueUpdate(h *Handlers) {
 	queueUpdateSem <- 1
-
 	select {
 	case _ = <-updateChan:
 		log.Println("Found pending update request. Don't start another one.")
