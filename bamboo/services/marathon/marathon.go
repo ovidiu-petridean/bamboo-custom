@@ -150,30 +150,39 @@ func fetchTasks(endpoint string) (map[string][]MarathonTask, error) {
 		sort.Sort(taskList)
 		tasksById := map[string][]MarathonTask{}
 		for _, task := range taskList {
-			//TODO; what happens if there are no healthchecks?
+			//TODO; check the alive
 
-			lastSuccessTime, errSuccess := time.Parse("2006-01-02T15:04:05Z07:00", task.HealthCheckResults[0].LastSuccess)
-			lastFailureTime, errFailure := time.Parse("2006-01-02T15:04:05Z07:00", task.HealthCheckResults[0].LastFailure)
+			if (task.HealthCheckResults !=  nil) {
 
-			if (errSuccess == nil) {
-				log.Println("There was a successful healthcheck")
+				lastSuccessTime, errSuccess := time.Parse("2006-01-02T15:04:05Z07:00", task.HealthCheckResults[0].LastSuccess)
+				lastFailureTime, errFailure := time.Parse("2006-01-02T15:04:05Z07:00", task.HealthCheckResults[0].LastFailure)
 
-				if (errFailure == nil) {
-					if (lastSuccessTime.After(lastFailureTime)) {
-						log.Println(lastSuccessTime.String() + "  yeee should update");
+				if (errSuccess == nil) {
+					log.Println("There was a successful healthcheck")
+
+					if (errFailure == nil) {
+						if (lastSuccessTime.After(lastFailureTime)) {
+							if tasksById[task.AppId] == nil {
+								tasksById[task.AppId] = []MarathonTask{}
+							}
+							tasksById[task.AppId] = append(tasksById[task.AppId], task)
+						}
+					} else {
+						if tasksById[task.AppId] == nil {
+							tasksById[task.AppId] = []MarathonTask{}
+						}
+						tasksById[task.AppId] = append(tasksById[task.AppId], task)
 					}
 				} else {
-					log.Println("All good, should update")
+					log.Println("Nothing to update here-----------")
 				}
 			} else {
-				log.Println("Nothing to update here")
+				if tasksById[task.AppId] == nil {
+					tasksById[task.AppId] = []MarathonTask{}
+				}
+				tasksById[task.AppId] = append(tasksById[task.AppId], task)
 			}
 
-			//todo: only in case of success
-			if tasksById[task.AppId] == nil {
-				tasksById[task.AppId] = []MarathonTask{}
-			}
-			tasksById[task.AppId] = append(tasksById[task.AppId], task)
 		}
 
 		return tasksById, nil
