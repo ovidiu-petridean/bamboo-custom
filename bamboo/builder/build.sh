@@ -11,7 +11,7 @@ license="Apache Software License 2.0"
 package_version=${_BAMBOO_PKGVERSION:-"-1"}
 origdir="$(pwd)"
 workspace="builder"
-pkgtype=${_PKGTYPE:-"deb"}
+pkgtype=${_PKGTYPE:-"rpm"}
 builddir="build"
 installdir="opt"
 function cleanup() {
