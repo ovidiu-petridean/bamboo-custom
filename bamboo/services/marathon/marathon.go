@@ -26,6 +26,7 @@ type App struct {
 	Tasks           []Task
 	ServicePort     int
 	Env             map[string]string
+	ResourcePath	string
 }
 
 type AppList []App
@@ -91,6 +92,7 @@ type MarathonApp struct {
 	HealthChecks []HealthChecks    `json:healthChecks`
 	Ports        []int             `json:ports`
 	Env          map[string]string `json:env`
+	Labels       map[string]string `json:labels`
 }
 
 type HealthChecks struct {
@@ -120,6 +122,7 @@ func fetchMarathonApps(endpoint string) (map[string]MarathonApp, error) {
 
 		for _, appConfig := range appResponse.Apps {
 			dataById[appConfig.Id] = appConfig
+
 		}
 
 		return dataById, nil
@@ -244,6 +247,7 @@ func createApps(tasksById map[string][]MarathonTask, marathonApps map[string]Mar
 			appPath = "/" + appId
 		}
 
+
 		//check if there were any ttasks created for the app
 		if (len(simpleTasks) > 0) {
 			app := App{
@@ -254,9 +258,8 @@ func createApps(tasksById map[string][]MarathonTask, marathonApps map[string]Mar
 				Tasks:           simpleTasks,
 				HealthCheckPath: parseHealthCheckPath(marathonApps[appId].HealthChecks),
 				Env:             marathonApps[appId].Env,
+				ResourcePath:	 parseResourcePath(marathonApps[appId], appId),
 			}
-
-
 
 			if len(marathonApps[appId].Ports) > 0 {
 				app.ServicePort = marathonApps[appId].Ports[0]
@@ -280,6 +283,16 @@ func parseHealthCheckPath(checks []HealthChecks) string {
 	}
 	return ""
 }
+
+func parseResourcePath(marathonApp MarathonApp, appId string) string {
+	if (marathonApp.Labels["resourcePath"] != ""){
+		return marathonApp.Labels["resourcePath"]
+	}
+
+	return appId
+}
+
+
 
 /*
 	Apps returns a struct that describes Marathon current app and their
