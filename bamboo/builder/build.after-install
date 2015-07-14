@@ -7,8 +7,8 @@ USER="bamboo"
 GROUP="bamboo"
 SHELL="/bin/false"
 
-case "$1" in
-	configure)
+#case "$1" in
+#	configure)
         if [ ! -d "${DATADIR}/log" ]; then
 			mkdir -p ${DATADIR}/log
 		fi
@@ -27,13 +27,13 @@ case "$1" in
 		fi
 		chown -R ${USER}:${GROUP} ${DATADIR}
 
-	;;
-
-	abort-upgrade|abort-remove|abort-deconfigure)
-	;;
-
-	*)
-		echo "postinst called with unknown argument \`$1'" >&2
-		exit 1
-	;;
-esac
+#	;;
+#
+#	abort-upgrade|abort-remove|abort-deconfigure)
+#	;;
+#
+#	*)
+#		echo "postinst called with unknown argument \`$1'" >&2
+#		exit 1
+#	;;
+#esac
