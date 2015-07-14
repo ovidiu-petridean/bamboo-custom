@@ -82,7 +82,6 @@ func handleHAPUpdate(conf *configuration.Configuration, conn *zk.Conn) bool {
 
 	newContent, err := template.RenderTemplate(conf.HAProxy.TemplatePath, string(templateContent), templateData)
 
-
 	if err != nil {
 		log.Fatalf("Template syntax error: \n %s", err)
 	}

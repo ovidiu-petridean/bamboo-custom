@@ -143,7 +143,7 @@ func fetchTasks(endpoint string) (map[string][]MarathonTask, error) {
 		}
 		err = json.Unmarshal(contents, &tasks)
 		if err != nil {
-			log.Println("---------88--- " + err.Error())
+			log.Println(err.Error())
 			return nil, err
 		}
 		taskList := tasks.Tasks
@@ -177,6 +177,7 @@ func fetchTasks(endpoint string) (map[string][]MarathonTask, error) {
 					log.Println("Nothing to update here-----------")
 				}
 			} else {
+				log.Println("There is no healthcheck on this app")
 				if tasksById[task.AppId] == nil {
 					tasksById[task.AppId] = []MarathonTask{}
 				}
@@ -185,20 +186,55 @@ func fetchTasks(endpoint string) (map[string][]MarathonTask, error) {
 
 		}
 
+		log.Printf("I have tasks of length: %v", len(tasksById))
+
 		return tasksById, nil
 	}
 }
 
 func createApps(tasksById map[string][]MarathonTask, marathonApps map[string]MarathonApp) AppList {
-
+	log.Println("ENTER >> createApps")
 	apps := AppList{}
 
 	for appId, tasks := range tasksById {
 		simpleTasks := []Task{}
 
 		for _, task := range tasks {
-			if len(task.Ports) > 0 {
-				simpleTasks = append(simpleTasks, Task{Host: task.Host, Port: task.Ports[0], SecondPort: task.Ports[1]})
+			if (len(task.Ports) > 0) {
+				//check if the app has health checks
+				if (len(marathonApps[appId].HealthChecks) > 0) {
+					log.Println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ The app has healthckechs: %v", len(marathonApps[appId].HealthChecks))
+					//check if the app has healthckeck results
+					if (len(task.HealthCheckResults) > 0) {
+						log.Println("^^^^^^^^^^^^^^^^^&^^^^^^^^^^^^^task has healthckeck results %v", len(task.HealthCheckResults))
+
+						//Check if the healthcheck results have passed or not
+						for _, healthCheckResult := range task.HealthCheckResults {
+							lastSuccessTime, errSuccess := time.Parse("2006-01-02T15:04:05Z07:00", healthCheckResult.LastSuccess)
+							lastFailureTime, errFailure := time.Parse("2006-01-02T15:04:05Z07:00", healthCheckResult.LastFailure)
+							//check last success
+							if (errSuccess == nil) {
+								log.Println("There was a successful healthcheck")
+								//check if there were failures
+								if (errFailure == nil) {
+									//check if the last success is newer than the last failure
+									if (lastSuccessTime.After(lastFailureTime)) {
+										//all ok here
+										simpleTasks = append(simpleTasks, Task{Host: task.Host, Port: task.Ports[0], SecondPort: task.Ports[1]})
+									}
+									//there were no failures
+								} else {
+									simpleTasks = append(simpleTasks, Task{Host: task.Host, Port: task.Ports[0], SecondPort: task.Ports[1]})
+								}
+							}
+						}
+						//there are no healtheck results
+					}
+					//the app has no healthcecks
+				} else {
+					simpleTasks = append(simpleTasks, Task{Host: task.Host, Port: task.Ports[0], SecondPort: task.Ports[1]})
+				}
+
 			}
 		}
 
@@ -208,23 +244,33 @@ func createApps(tasksById map[string][]MarathonTask, marathonApps map[string]Mar
 			appPath = "/" + appId
 		}
 
-		app := App{
-			// Since Marathon 0.7, apps are namespaced with path
-			Id: appPath,
-			// Used for template
-			EscapedId:       strings.Replace(appId, "/", "::", -1),
-			Tasks:           simpleTasks,
-			HealthCheckPath: parseHealthCheckPath(marathonApps[appId].HealthChecks),
-			Env:             marathonApps[appId].Env,
+		//check if there were any ttasks created for the app
+		if (len(simpleTasks) > 0) {
+			app := App{
+				// Since Marathon 0.7, apps are namespaced with path
+				Id: appPath,
+				// Used for template
+				EscapedId:       strings.Replace(appId, "/", "::", -1),
+				Tasks:           simpleTasks,
+				HealthCheckPath: parseHealthCheckPath(marathonApps[appId].HealthChecks),
+				Env:             marathonApps[appId].Env,
+			}
+
+
+
+			if len(marathonApps[appId].Ports) > 0 {
+				app.ServicePort = marathonApps[appId].Ports[0]
+			}
+
+			if (len(marathonApps[appId].HealthChecks) > 0) {
+				log.Println("The app has healthchecks")
+			}
+
+			apps = append(apps, app)
 		}
-
-		if len(marathonApps[appId].Ports) > 0 {
-			app.ServicePort = marathonApps[appId].Ports[0]
-		}
-
-
-		apps = append(apps, app)
 	}
+
+	log.Println("EXIT << createApps")
 	return apps
 }
 
@@ -258,7 +304,9 @@ func FetchApps(maraconf configuration.Marathon) (AppList, error) {
 }
 
 func _fetchApps(url string) (AppList, error) {
+	log.Println("ENTER _fetchApps")
 	tasks, err := fetchTasks(url)
+
 	if err != nil {
 		return nil, err
 	}
@@ -270,5 +318,8 @@ func _fetchApps(url string) (AppList, error) {
 
 	apps := createApps(tasks, marathonApps)
 	sort.Sort(apps)
+
+	log.Println("EXIT _fetchApps")
+
 	return apps, nil
 }
