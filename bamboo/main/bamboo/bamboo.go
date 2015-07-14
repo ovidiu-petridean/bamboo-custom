@@ -31,7 +31,8 @@ var logPath string
 var serverBindPort string
 
 func init() {
-	flag.StringVar(&configFilePath, "config", "/home/opetridean/go/src/github.com/QubitProducts/bamboo/config/development.json", "Full path of the configuration JSON file")
+//	flag.StringVar(&configFilePath, "config", "/home/opetridean/go/src/github.com/QubitProducts/bamboo/config/development.json", "Full path of the configuration JSON file")
+	flag.StringVar(&configFilePath, "config", "config/development.json", "Full path of the configuration JSON file")
 	flag.StringVar(&logPath, "log", "", "Log path to a file. Default logs to stdout")
 	flag.StringVar(&serverBindPort, "bind", ":8000", "Bind HTTP server to a specific port")
 }
