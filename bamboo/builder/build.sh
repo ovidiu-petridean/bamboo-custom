@@ -36,7 +36,7 @@ function build() {
     chmod 755 ${name}/${installdir}/bamboo/bamboo
 
     #Copy the init script
-    cp ${builddir}/init.d.centos7-bamboo-server ${name}/${installdir}/bamboo/bamboo
+    cp ${origdir}/${workspace}/init.d.centos7-bamboo-server ${name}/${installdir}/bamboo/config/init.d.centos7-bamboo-server
 
     # Link default confiugration
     cp -rp ${origdir}/config/* ${name}/${installdir}/bamboo/config/.
